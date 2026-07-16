@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Macintosh PiForma Guided Tour</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --platinum: #d6d6d6;
+      --platinum-light: #f7f7f7;
+      --platinum-mid: #b7b7b7;
+      --platinum-dark: #7d7d7d;
+      --ink: #111;
+      --desktop: #6f7788;
+      --paper: #fbfbfb;
+      --blue: #3366cc;
+      --blue-light: #6d8fe3;
+      --ui: "ChicagoFLF", "Chicago", "Charcoal", "Geneva", sans-serif;
+      --body: "Charcoal", "Geneva", "Lucida Grande", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #666d7e;
+      font-family: var(--body);
+      color: var(--ink);
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255,255,255,.08), transparent 25%),
+        linear-gradient(#737b8c, #666d7e);
+    }
+
+    button, select { font: inherit; }
+
+    .screen {
+      width: 800px;
+      height: 480px;
+      background: var(--desktop);
+      border: 1px solid #000;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 8px 8px 0 rgba(0,0,0,.28);
+    }
+
+    .menubar {
+      height: 20px;
+      background: #fff;
+      border-bottom: 1px solid #000;
+      display: flex;
+      align-items: center;
+      padding: 0 7px;
+      font-family: var(--ui);
+      font-size: 12px;
+      user-select: none;
+    }
+
+    .apple { margin-right: 10px; font-size: 14px; line-height: 1; }
+    .menu { margin-right: 13px; }
+    .clock { margin-left: auto; }
+
+    .window {
+      position: absolute;
+      left: 44px;
+      top: 48px;
+      width: 712px;
+      height: 390px;
+      background: var(--platinum);
+      border: 1px solid #000;
+      box-shadow: 3px 3px 0 rgba(0,0,0,.24);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .titlebar {
+      height: 20px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid #000;
+      background: var(--platinum);
+      user-select: none;
+    }
+
+    .titlebar::before {
+      content: "";
+      position: absolute;
+      inset: 3px 28px;
+      background: repeating-linear-gradient(
+        to bottom,
+        #fff 0, #fff 1px,
+        #7f7f7f 1px, #7f7f7f 2px,
+        transparent 2px, transparent 3px
+      );
+      opacity: .85;
+    }
+
+    .title {
+      position: relative;
+      z-index: 1;
+      background: var(--platinum);
+      padding: 1px 7px 2px;
+      font-family: var(--ui);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .close-box,
+    .zoom-box {
+      position: absolute;
+      z-index: 2;
+      width: 13px;
+      height: 13px;
+      top: 3px;
+      border: 1px solid #000;
+      background: var(--platinum);
+      box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #858585 inset;
+    }
+
+    .close-box { left: 5px; }
+    .zoom-box { right: 5px; }
+
+    .window-body {
+      min-height: 0;
+      flex: 1;
+      background: var(--platinum);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toolbar {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 5px 4px;
+      border: 1px solid #868686;
+      border-top-color: #fff;
+      border-left-color: #fff;
+      margin-bottom: 5px;
+      background: #d2d2d2;
+    }
+
+    .tool-button,
+    .nav-button {
+      background: var(--platinum);
+      border: 1px solid #000;
+      border-radius: 5px;
+      padding: 2px 10px 3px;
+      min-width: 62px;
+      box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #8a8a8a inset;
+      font-family: var(--ui);
+      font-size: 11px;
+      line-height: 1.1;
+      cursor: pointer;
+    }
+
+    .tool-button:active,
+    .nav-button:active {
+      box-shadow: -1px -1px 0 #fff inset, 1px 1px 0 #777 inset;
+      padding-top: 3px;
+      padding-bottom: 2px;
+    }
+
+    .section-picker {
+      margin-left: auto;
+      width: 230px;
+      height: 19px;
+      border: 1px solid #000;
+      background: #fff;
+      font-family: var(--ui);
+      font-size: 11px;
+      padding: 1px 20px 1px 4px;
+    }
+
+    .content {
+      min-height: 0;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid #000;
+    }
+
+    .home-view,
+    .card-view {
+      position: absolute;
+      inset: 0;
+    }
+
+    .home-view {
+      padding: 20px 25px 18px;
+      background: #efefef;
+    }
+
+    .home-title {
+      text-align: center;
+      margin: 0 0 3px;
+      font-family: Georgia, "Apple Garamond", serif;
+      font-size: 31px;
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    .home-subtitle {
+      text-align: center;
+      margin-bottom: 14px;
+      font-family: var(--ui);
+      font-size: 11px;
+    }
+
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      row-gap: 10px;
+      column-gap: 8px;
+      padding: 0 14px;
+      align-content: start;
+    }
+
+    .icon-button {
+      width: 100%;
+      min-height: 118px;
+      border: 0;
+      background: transparent;
+      padding: 4px 2px;
+      text-align: center;
+      cursor: pointer;
+      color: #000;
+      font-family: var(--ui);
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 4px;
+    }
+
+    .icon-button:hover .icon-label,
+    .icon-button:focus .icon-label,
+    .icon-button.selected .icon-label {
+      color: #fff;
+      background: var(--blue);
+      outline: 1px dotted #fff;
+      outline-offset: -2px;
+    }
+
+    .icon-art {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 48px;
+      margin-top: 1px;
+    }
+
+    .icon-art svg {
+      width: 48px;
+      height: 48px;
+      shape-rendering: crispEdges;
+      image-rendering: pixelated;
+    }
+
+    .icon-label {
+      display: inline-block;
+      padding: 1px 3px;
+      max-width: 130px;
+      line-height: 1.2;
+      min-height: 28px;
+    }
+
+    .repo-line {
+      position: absolute;
+      bottom: 8px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--ui);
+      font-size: 10px;
+      color: #333;
+    }
+
+    .card-view {
+      display: none;
+      background: #fff;
+    }
+
+    .card-view.active { display: flex; flex-direction: column; }
+    .home-view.hidden { display: none; }
+
+    .card-scroll {
+      min-height: 0;
+      flex: 1;
+      overflow-y: auto;
+      padding: 17px 22px 18px;
+      scrollbar-color: #8f8f8f #d6d6d6;
+    }
+
+    .card-scroll::-webkit-scrollbar { width: 15px; }
+    .card-scroll::-webkit-scrollbar-track {
+      background: #d6d6d6;
+      border-left: 1px solid #000;
+    }
+    .card-scroll::-webkit-scrollbar-thumb {
+      background: #b7b7b7;
+      border: 1px solid #000;
+      box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #777 inset;
+    }
+
+    .stack-kicker {
+      margin-bottom: 4px;
+      font-family: var(--ui);
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #555;
+    }
+
+    .card-scroll h1,
+    .card-scroll h2,
+    .card-scroll h3 {
+      font-family: var(--ui);
+      color: #111;
+    }
+
+    .card-scroll h1 {
+      margin: 0 0 9px;
+      padding-bottom: 5px;
+      font-size: 22px;
+      border-bottom: 1px solid #000;
+    }
+
+    .card-scroll h2 { margin: 17px 0 7px; font-size: 17px; }
+    .card-scroll h3 { margin: 14px 0 6px; font-size: 14px; }
+
+    .card-scroll p,
+    .card-scroll li {
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    .card-scroll code {
+      font-family: Monaco, "Courier New", monospace;
+      font-size: 11px;
+      background: #ececec;
+      padding: 1px 2px;
+    }
+
+    .card-scroll pre {
+      overflow: auto;
+      padding: 8px;
+      background: #111;
+      color: #fff;
+      border: 1px solid #000;
+    }
+
+    .card-scroll pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+
+    .card-scroll table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 11px;
+    }
+
+    .card-scroll th,
+    .card-scroll td {
+      border: 1px solid #555;
+      padding: 5px 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .card-scroll th {
+      background: #dedede;
+      font-family: var(--ui);
+    }
+
+    .card-scroll img {
+      max-width: 100%;
+      border: 1px solid #000;
+    }
+
+    .card-scroll a { color: #153f9c; }
+
+    .footer {
+      height: 31px;
+      padding: 4px 6px;
+      border-top: 1px solid #000;
+      background: var(--platinum);
+      display: grid;
+      grid-template-columns: 90px 1fr 90px;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .counter {
+      text-align: center;
+      font-family: var(--ui);
+      font-size: 10px;
+    }
+
+    .status {
+      position: absolute;
+      left: 54px;
+      bottom: 24px;
+      font-family: var(--ui);
+      font-size: 10px;
+      color: #fff;
+      text-shadow: 1px 1px #333;
+    }
+
+    @media (max-width: 840px), (max-height: 520px) {
+      body { padding: 0; }
+      .screen {
+        transform: scale(min(calc(100vw / 800), calc(100vh / 480)));
+        transform-origin: center center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="screen">
+    <div class="menubar">
+      <span class="apple"></span>
+      <span class="menu">File</span>
+      <span class="menu">Edit</span>
+      <span class="menu">Navigate</span>
+      <span class="menu">Help</span>
+      <span class="clock" id="clock">12:00 PM</span>
+    </div>
+
+    <section class="window">
+      <div class="titlebar">
+        <button class="close-box" aria-label="Close"></button>
+        <div class="title">Macintosh PiForma Guided Tour</div>
+        <button class="zoom-box" aria-label="Zoom"></button>
+      </div>
+
+      <div class="window-body">
+        <div class="toolbar">
+          <button class="tool-button" id="homeButton">Home</button>
+          <button class="tool-button" id="reloadButton">Reload</button>
+          <select id="sectionPicker" class="section-picker" aria-label="Choose a card"></select>
+        </div>
+
+        <div class="content">
+          <section class="home-view" id="homeView">
+            <h1 class="home-title">Macintosh PiForma</h1>
+            <div class="home-subtitle">Select a stack to begin the guided tour.</div>
+            <div class="icon-grid" id="iconGrid"></div>
+            <div class="repo-line">
+              <span id="repoStatus">Connecting to repository...</span>
+              <span>Live documentation stack</span>
+            </div>
+          </section>
+
+          <section class="card-view" id="cardView">
+            <div class="card-scroll" id="cardScroll"></div>
+            <footer class="footer">
+              <button class="nav-button" id="previousButton">◀ Previous</button>
+              <div class="counter" id="counter">Card 0 of 0</div>
+              <button class="nav-button" id="nextButton">Next ▶</button>
+            </footer>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <div class="status">PiForma OS • 800 × 480</div>
+  </main>
+
+<script>
+  const REPO = "milagrofrost/Macintosh-PiForma-docs";
+  const BRANCH = "main";
+
+  const STACKS = [
+    { title: "Meet PiForma", file: "README.md", kind: "computer",
+      sections: ["Macintosh PiForma", "What it does", "Why this exists", "Project status"] },
+    { title: "Hardware", file: "docs/hardware.md", kind: "folder-hardware" },
+    { title: "Software", file: "docs/software.md", kind: "folder-software",
+      sections: ["Software", "System", "Current graphical stack", "Boot flow", "Desktop look",
+                 "Apple logo gesture button", "Volume knob", "Included apps and launchers"] },
+    { title: "Wiring", file: "docs/wiring.md", kind: "wiring" },
+    { title: "Build Log", file: "docs/build-log.md", kind: "hammer" },
+    { title: "Maintenance", file: "docs/maintenance.md", kind: "toolbox" },
+    { title: "Known Issues", file: "docs/known-issues.md", kind: "warning" },
+    { title: "Related Projects", file: "docs/related-projects.md", kind: "folder-projects" }
+  ];
+
+  const ICONS = {
+    "computer": `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="8" y="5" width="28" height="33" fill="#d9d2be" stroke="#000"/>
+        <rect x="12" y="9" width="20" height="18" fill="#95a1ad" stroke="#000"/>
+        <rect x="14" y="30" width="8" height="2" fill="#7a7a7a"/>
+        <rect x="24" y="30" width="8" height="2" fill="#7a7a7a"/>
+        <rect x="16" y="38" width="12" height="3" fill="#a7a094" stroke="#000"/>
+        <rect x="13" y="41" width="18" height="2" fill="#9d9687" stroke="#000"/>
+      </svg>`,
+    "folder-hardware": `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="6" y="14" width="36" height="24" fill="#d7c76f" stroke="#000"/>
+        <rect x="8" y="12" width="14" height="5" fill="#d7c76f" stroke="#000"/>
+        <rect x="9" y="19" width="9" height="10" fill="#8c9bad" stroke="#000"/>
+        <rect x="11" y="21" width="5" height="1" fill="#fff"/>
+        <rect x="21" y="20" width="17" height="2" fill="#9a8f4d"/>
+        <rect x="21" y="24" width="13" height="2" fill="#9a8f4d"/>
+      </svg>`,
+    "folder-software": `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="6" y="14" width="36" height="24" fill="#d7c76f" stroke="#000"/>
+        <rect x="8" y="12" width="14" height="5" fill="#d7c76f" stroke="#000"/>
+        <rect x="10" y="19" width="16" height="12" fill="#f4f4f4" stroke="#000"/>
+        <rect x="12" y="21" width="12" height="2" fill="#6d8fe3"/>
+        <rect x="12" y="25" width="10" height="1" fill="#777"/>
+        <rect x="12" y="27" width="8" height="1" fill="#777"/>
+      </svg>`,
+    "wiring": `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M9 32 L18 17 L25 24 L33 10 L39 13 L30 29 L23 22 L15 36 Z" fill="#000"/>
+        <rect x="8" y="31" width="4" height="4" fill="#000"/>
+        <rect x="36" y="11" width="4" height="4" fill="#000"/>
+      </svg>`,
+    "hammer": `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="24" y="10" width="6" height="25" fill="#4a433e" stroke="#000" transform="rotate(35 27 22)"/>
+        <rect x="10" y="11" width="18" height="8" fill="#b4b4b4" stroke="#000" transform="rotate(-20 19 15)"/>
+        <rect x="10" y="15" width="6" height="4" fill="#e1e1e1" stroke="#000" transform="rotate(-20 13 17)"/>
+      </svg>`,
+    "toolbox": `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="8" y="18" width="32" height="18" fill="#b85c58" stroke="#000"/>
+        <rect x="18" y="12" width="12" height="6" fill="#d8d8d8" stroke="#000"/>
+        <rect x="16" y="24" width="16" height="2" fill="#f6d56e"/>
+        <rect x="22" y="22" width="4" height="6" fill="#f6d56e"/>
+      </svg>`,
+    "warning": `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <polygon points="24,6 42,39 6,39" fill="#f4e57c" stroke="#000"/>
+        <rect x="22" y="16" width="4" height="12" fill="#000"/>
+        <rect x="22" y="31" width="4" height="4" fill="#000"/>
+      </svg>`,
+    "folder-projects": `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="6" y="14" width="36" height="24" fill="#d7c76f" stroke="#000"/>
+        <rect x="8" y="12" width="14" height="5" fill="#d7c76f" stroke="#000"/>
+        <rect x="10" y="20" width="8" height="8" fill="#95a1ad" stroke="#000"/>
+        <rect x="20" y="20" width="8" height="8" fill="#b1c2d6" stroke="#000"/>
+        <rect x="30" y="20" width="8" height="8" fill="#95a1ad" stroke="#000"/>
+      </svg>`
+  };
+
+  const state = { stacks: [], stackIndex: 0, cardIndex: 0 };
+
+  const els = {
+    iconGrid: document.getElementById("iconGrid"),
+    homeView: document.getElementById("homeView"),
+    cardView: document.getElementById("cardView"),
+    cardScroll: document.getElementById("cardScroll"),
+    sectionPicker: document.getElementById("sectionPicker"),
+    counter: document.getElementById("counter"),
+    previousButton: document.getElementById("previousButton"),
+    nextButton: document.getElementById("nextButton"),
+    homeButton: document.getElementById("homeButton"),
+    reloadButton: document.getElementById("reloadButton"),
+    repoStatus: document.getElementById("repoStatus"),
+    clock: document.getElementById("clock")
+  };
+
+  marked.setOptions({ gfm: true, breaks: false });
+
+  function rawUrl(path) {
+    return `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}`;
+  }
+
+  function normalizePath(path) {
+    const parts = [];
+    path.split("/").forEach(part => {
+      if (!part || part === ".") return;
+      if (part === "..") parts.pop();
+      else parts.push(part);
+    });
+    return parts.join("/");
+  }
+
+  function rewriteRelativeLinks(html, sourceFile) {
+    const sourceDir = sourceFile.includes("/")
+      ? sourceFile.slice(0, sourceFile.lastIndexOf("/") + 1)
+      : "";
+
+    const holder = document.createElement("div");
+    holder.innerHTML = html;
+
+    holder.querySelectorAll("img").forEach(img => {
+      const src = img.getAttribute("src");
+      if (!src || /^(https?:|data:|blob:)/i.test(src)) return;
+      img.src = rawUrl(normalizePath(sourceDir + src));
+    });
+
+    holder.querySelectorAll("a").forEach(link => {
+      const href = link.getAttribute("href");
+      if (!href || /^(https?:|mailto:|#)/i.test(href)) return;
+      link.href = `https://github.com/${REPO}/blob/${BRANCH}/${normalizePath(sourceDir + href)}`;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    });
+
+    return holder.innerHTML;
+  }
+
+  function splitMarkdown(markdown, wanted) {
+    const lines = markdown.replace(/\r\n/g, "\n").split("\n");
+    const sections = [];
+    let current = null;
+    let inFence = false;
+
+    for (const line of lines) {
+      if (/^```/.test(line.trim())) inFence = !inFence;
+      const heading = !inFence ? line.match(/^(#{1,2})\s+(.+?)\s*$/) : null;
+
+      if (heading) {
+        if (current) sections.push(current);
+        current = { title: heading[2].replace(/\s+#+$/, ""), lines: [line] };
+      } else {
+        if (!current) current = { title: "Introduction", lines: ["# Introduction"] };
+        current.lines.push(line);
+      }
+    }
+
+    if (current) sections.push(current);
+
+    let filtered = sections;
+    if (wanted?.length) {
+      filtered = sections.filter(section =>
+        wanted.some(name => name.toLowerCase() === section.title.toLowerCase())
+      );
+    }
+
+    if (!filtered.length) filtered = sections;
+
+    return filtered.map(section => ({
+      title: section.title,
+      markdown: section.lines.join("\n").trim()
+    }));
+  }
+
+  async function loadStack(def) {
+    const response = await fetch(rawUrl(def.file), { cache: "no-store" });
+    if (!response.ok) throw new Error(`${def.file}: HTTP ${response.status}`);
+
+    const markdown = await response.text();
+    const cards = splitMarkdown(markdown, def.sections).map(card => ({
+      title: card.title,
+      html: rewriteRelativeLinks(marked.parse(card.markdown), def.file)
+    }));
+
+    return { ...def, cards };
+  }
+
+  async function loadAll() {
+    els.repoStatus.textContent = "Connecting to repository...";
+    const results = await Promise.allSettled(STACKS.map(loadStack));
+
+    state.stacks = results.map((result, i) => {
+      if (result.status === "fulfilled") return result.value;
+      return {
+        ...STACKS[i],
+        cards: [{
+          title: "Unable to load",
+          html: `<h1>Unable to load</h1><p><code>${STACKS[i].file}</code> could not be fetched.</p>`
+        }]
+      };
+    });
+
+    const failed = results.filter(r => r.status === "rejected").length;
+    els.repoStatus.textContent = failed
+      ? `${failed} document(s) unavailable`
+      : "Live content from Macintosh-PiForma-docs";
+
+    renderHome();
+    showHome();
+  }
+
+  function renderHome() {
+    els.iconGrid.innerHTML = "";
+
+    state.stacks.forEach((stack, index) => {
+      const button = document.createElement("button");
+      button.className = "icon-button";
+      button.dataset.kind = stack.kind || "folder";
+      button.innerHTML = `
+        <div class="icon-art">${ICONS[stack.kind] || ICONS["folder-projects"]}</div>
+        <span class="icon-label">${stack.title}</span>
+      `;
+
+      button.addEventListener("dblclick", () => openStack(index, 0));
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".icon-button").forEach(x => x.classList.remove("selected"));
+        button.classList.add("selected");
+      });
+
+      els.iconGrid.appendChild(button);
+    });
+  }
+
+  function showHome() {
+    els.homeView.classList.remove("hidden");
+    els.cardView.classList.remove("active");
+    els.sectionPicker.innerHTML = '<option>Choose a stack...</option>';
+  }
+
+  function openStack(stackIndex, cardIndex) {
+    state.stackIndex = stackIndex;
+    const stack = state.stacks[stackIndex];
+    state.cardIndex = Math.max(0, Math.min(cardIndex, stack.cards.length - 1));
+
+    els.homeView.classList.add("hidden");
+    els.cardView.classList.add("active");
+
+    els.sectionPicker.innerHTML = "";
+    stack.cards.forEach((card, i) => {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = card.title;
+      els.sectionPicker.appendChild(option);
+    });
+
+    renderCard();
+  }
+
+  function renderCard() {
+    const stack = state.stacks[state.stackIndex];
+    const card = stack.cards[state.cardIndex];
+
+    els.cardScroll.innerHTML = `
+      <div class="stack-kicker">${stack.title} Stack</div>
+      ${card.html}
+    `;
+
+    els.sectionPicker.value = state.cardIndex;
+    els.counter.textContent = `Card ${state.cardIndex + 1} of ${stack.cards.length}`;
+    els.previousButton.disabled = state.cardIndex === 0;
+    els.nextButton.disabled = state.cardIndex === stack.cards.length - 1;
+    els.cardScroll.scrollTop = 0;
+  }
+
+  els.homeButton.addEventListener("click", showHome);
+  els.reloadButton.addEventListener("click", loadAll);
+  els.sectionPicker.addEventListener("change", e => {
+    if (els.cardView.classList.contains("active")) {
+      openStack(state.stackIndex, Number(e.target.value));
+    }
+  });
+
+  els.previousButton.addEventListener("click", () => {
+    openStack(state.stackIndex, state.cardIndex - 1);
+  });
+
+  els.nextButton.addEventListener("click", () => {
+    openStack(state.stackIndex, state.cardIndex + 1);
+  });
+
+  window.addEventListener("keydown", e => {
+    if (!els.cardView.classList.contains("active")) return;
+    const stack = state.stacks[state.stackIndex];
+
+    if (e.key === "ArrowLeft" && state.cardIndex > 0) {
+      openStack(state.stackIndex, state.cardIndex - 1);
+    }
+    if (e.key === "ArrowRight" && state.cardIndex < stack.cards.length - 1) {
+      openStack(state.stackIndex, state.cardIndex + 1);
+    }
+    if (e.key === "Escape") showHome();
+  });
+
+  function updateClock() {
+    els.clock.textContent = new Date().toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  }
+
+  updateClock();
+  setInterval(updateClock, 30000);
+  loadAll();
+</script>
+</body>
+</html>
