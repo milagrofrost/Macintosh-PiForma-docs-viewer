@@ -1,0 +1,21 @@
+[package]
+name = "macintosh-piforma-docs-viewer"
+version = "0.2.0"
+description = "Mac OS 8/9-style viewer for Macintosh PiForma documentation"
+authors = ["Matthew Frost"]
+edition = "2021"
+rust-version = "1.77.2"
+license = "MIT"
+
+[lib]
+name = "macintosh_piforma_docs_viewer_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
