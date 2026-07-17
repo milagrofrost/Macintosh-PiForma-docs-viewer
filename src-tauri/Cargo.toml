@@ -1,6 +1,6 @@
 [package]
 name = "macintosh-piforma-docs-viewer"
-version = "0.3.0"
+version = "0.4.0"
 description = "Mac OS 8/9-style viewer for Macintosh PiForma documentation"
 authors = ["Matthew Frost"]
 edition = "2021"
