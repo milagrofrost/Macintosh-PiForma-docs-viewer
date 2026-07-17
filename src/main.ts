@@ -7,6 +7,9 @@ import { STACKS, type StackKind } from "./stacks";
 type Card = { title: string; html: string };
 type LoadedStack = (typeof STACKS)[number] & { cards: Card[] };
 
+const AUTO_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const AUTO_CHECK_KEY = "piformaDocsLastAutomaticCheck";
+
 const ICONS: Record<StackKind, string> = {
   computer: '<svg viewBox="0 0 48 48"><rect x="8" y="5" width="28" height="33" fill="#d9d2be" stroke="#000"/><rect x="12" y="9" width="20" height="18" fill="#95a1ad" stroke="#000"/><rect x="16" y="38" width="12" height="3" fill="#a7a094" stroke="#000"/></svg>',
   "folder-hardware": '<svg viewBox="0 0 48 48"><rect x="6" y="14" width="36" height="24" fill="#d7c76f" stroke="#000"/><rect x="8" y="12" width="14" height="5" fill="#d7c76f" stroke="#000"/><rect x="10" y="20" width="10" height="10" fill="#8c9bad" stroke="#000"/></svg>',
@@ -53,7 +56,10 @@ async function load(): Promise<void> {
   }));
   stacks = results.map((result, index) => result.status === "fulfilled" ? result.value : { ...STACKS[index], cards: [{ title: "Unavailable", html: `<h1>Unavailable</h1><p>${STACKS[index].file} is not available.</p>` }] });
   $("status").textContent = manifest.source === "cache" ? "Cached documentation" : "Bundled documentation";
-  $("snapshot").textContent = `${manifest.source === "cache" ? "Updated" : "Snapshot"}: ${new Date(manifest.generatedAt).toLocaleDateString()}`;
+  const date = new Date(manifest.generatedAt).toLocaleDateString();
+  const commit = manifest.commit ? ` • ${manifest.commit.slice(0, 7)}` : "";
+  $("snapshot").textContent = `${manifest.source === "cache" ? "Updated" : "Snapshot"}: ${date}${commit}`;
+  $("snapshot").title = manifest.commit ? `Documentation commit ${manifest.commit}` : "Bundled documentation snapshot";
   renderHome(); showHome();
 }
 
@@ -78,17 +84,44 @@ function openStack(nextStack: number, nextCard: number): void {
   ($("previous") as HTMLButtonElement).disabled = cardIndex === 0; ($("next") as HTMLButtonElement).disabled = cardIndex === stack.cards.length - 1;
 }
 
-$("home").onclick = showHome;
-$("update").onclick = async () => {
+async function runUpdate(manual: boolean): Promise<void> {
   const button = $("update") as HTMLButtonElement;
-  if (!isTauriRuntime()) { await load(); return; }
-  button.disabled = true; $("status").textContent = "Checking for updates...";
-  try { const result = await updateDocumentation(); $("status").textContent = result?.updated ? `Updated ${result.files} files` : "Documentation is current"; await load(); }
-  catch (error) { $("status").textContent = `Update failed: ${String(error)}`; }
-  finally { button.disabled = false; }
-};
+  button.disabled = true;
+  $("status").textContent = manual ? "Checking for updates..." : "Automatic update check...";
+  try {
+    const result = await updateDocumentation();
+    if (result?.updated) {
+      await load();
+      $("status").textContent = `Updated ${result.files} files`;
+    } else {
+      await load();
+      $("status").textContent = "Documentation is current";
+    }
+  } catch (error) {
+    $("status").textContent = manual ? `Update failed: ${String(error)}` : "Offline • using current documentation";
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function automaticUpdateCheck(): Promise<void> {
+  if (!isTauriRuntime()) return;
+  const lastCheck = Number(localStorage.getItem(AUTO_CHECK_KEY) ?? "0");
+  if (Number.isFinite(lastCheck) && Date.now() - lastCheck < AUTO_CHECK_INTERVAL_MS) return;
+  localStorage.setItem(AUTO_CHECK_KEY, String(Date.now()));
+  await runUpdate(false);
+}
+
+$("home").onclick = showHome;
+$("update").onclick = async () => { if (!isTauriRuntime()) { await load(); return; } await runUpdate(true); };
 $("previous").onclick = () => openStack(stackIndex, cardIndex - 1);
 $("next").onclick = () => openStack(stackIndex, cardIndex + 1);
 $("picker").onchange = (event) => openStack(stackIndex, Number((event.target as HTMLSelectElement).value));
 window.onkeydown = (event) => { if (!$("card-view").classList.contains("active")) return; if (event.key === "ArrowLeft" && cardIndex > 0) openStack(stackIndex, cardIndex - 1); if (event.key === "ArrowRight" && cardIndex < stacks[stackIndex].cards.length - 1) openStack(stackIndex, cardIndex + 1); if (event.key === "Escape") showHome(); };
-void load();
+
+async function bootstrap(): Promise<void> {
+  await load();
+  await automaticUpdateCheck();
+}
+
+void bootstrap();
