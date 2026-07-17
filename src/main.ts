@@ -1,5 +1,6 @@
 import { marked } from "marked";
 import "./styles.css";
+import { initializePlatform } from "./platform";
 import { STACKS, type StackKind } from "./stacks";
 
 type Card = { title: string; html: string };
@@ -22,7 +23,7 @@ if (!app) throw new Error("Missing #app");
 app.innerHTML = `
 <main class="site-shell">
   <section class="window">
-    <header class="titlebar"><button class="window-box close-box"></button><h1>Macintosh PiForma Guided Tour</h1><button class="window-box zoom-box"></button></header>
+    <header class="titlebar"><button class="window-box close-box" aria-label="Close"></button><h1>Macintosh PiForma Guided Tour</h1><button class="window-box zoom-box" aria-label="Zoom" disabled></button></header>
     <div class="window-body">
       <div class="toolbar"><button id="home">Home</button><button id="reload">Reload</button><select id="picker"><option>Choose a stack...</option></select></div>
       <div class="content">
@@ -32,6 +33,8 @@ app.innerHTML = `
     </div>
   </section>
 </main>`;
+
+initializePlatform();
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string): T => {
   const node = document.getElementById(id);

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Macintosh PiForma Docs Viewer",
+  "version": "0.2.0",
+  "identifier": "com.milagrofrost.macintosh-piforma-docs-viewer",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Macintosh PiForma Guided Tour",
+        "width": 656,
+        "height": 420,
+        "minWidth": 656,
+        "minHeight": 420,
+        "maxWidth": 656,
+        "maxHeight": 420,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": true,
+        "closable": true,
+        "decorations": false,
+        "transparent": true,
+        "center": true,
+        "visible": true,
+        "skipTaskbar": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb"],
+    "category": "Utility",
+    "shortDescription": "Retro documentation viewer for Macintosh PiForma",
+    "longDescription": "A Mac OS 8/9 and HyperCard-inspired offline documentation viewer for the Macintosh PiForma Raspberry Pi project.",
+    "copyright": "Copyright © 2026 Matthew Frost",
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    }
+  }
+}
