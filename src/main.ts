@@ -1,5 +1,6 @@
 import { marked } from "marked";
 import "./styles.css";
+import { getManifest, isTauriRuntime, readDocument, updateDocumentation } from "./content";
 import { initializePlatform } from "./platform";
 import { STACKS, type StackKind } from "./stacks";
 
@@ -19,29 +20,10 @@ const ICONS: Record<StackKind, string> = {
 
 const app = document.querySelector<HTMLElement>("#app");
 if (!app) throw new Error("Missing #app");
-
-app.innerHTML = `
-<main class="site-shell">
-  <section class="window">
-    <header class="titlebar"><button class="window-box close-box" aria-label="Close"></button><h1>Macintosh PiForma Guided Tour</h1><button class="window-box zoom-box" aria-label="Zoom" disabled></button></header>
-    <div class="window-body">
-      <div class="toolbar"><button id="home">Home</button><button id="reload">Reload</button><select id="picker"><option>Choose a stack...</option></select></div>
-      <div class="content">
-        <section id="home-view" class="home-view"><h2>Macintosh PiForma</h2><p>Select a stack to begin the guided tour.</p><div id="icon-grid" class="icon-grid"></div><div class="repo-line"><span id="status">Loading bundled documentation...</span><span id="snapshot">Offline-ready snapshot</span></div></section>
-        <section id="card-view" class="card-view"><div id="card-scroll" class="card-scroll"></div><footer><button id="previous">◀ Previous</button><span id="counter">Card 0 of 0</span><button id="next">Next ▶</button></footer></section>
-      </div>
-    </div>
-  </section>
-</main>`;
-
+app.innerHTML = `<main class="site-shell"><section class="window"><header class="titlebar"><button class="window-box close-box" aria-label="Close"></button><h1>Macintosh PiForma Guided Tour</h1><button class="window-box zoom-box" aria-label="Zoom" disabled></button></header><div class="window-body"><div class="toolbar"><button id="home">Home</button><button id="update">${isTauriRuntime() ? "Update Stack" : "Reload"}</button><select id="picker"><option>Choose a stack...</option></select></div><div class="content"><section id="home-view" class="home-view"><h2>Macintosh PiForma</h2><p>Select a stack to begin the guided tour.</p><div id="icon-grid" class="icon-grid"></div><div class="repo-line"><span id="status">Loading documentation...</span><span id="snapshot">Offline-ready snapshot</span></div></section><section id="card-view" class="card-view"><div id="card-scroll" class="card-scroll"></div><footer><button id="previous">◀ Previous</button><span id="counter">Card 0 of 0</span><button id="next">Next ▶</button></footer></section></div></div></section></main>`;
 initializePlatform();
 
-const $ = <T extends HTMLElement = HTMLElement>(id: string): T => {
-  const node = document.getElementById(id);
-  if (!node) throw new Error(`Missing ${id}`);
-  return node as T;
-};
-
+const $ = <T extends HTMLElement = HTMLElement>(id: string): T => { const node = document.getElementById(id); if (!node) throw new Error(`Missing ${id}`); return node as T; };
 let stacks: LoadedStack[] = [];
 let stackIndex = 0;
 let cardIndex = 0;
@@ -53,13 +35,8 @@ function splitMarkdown(source: string, wanted?: string[]): { title: string; mark
   for (const line of source.replace(/\r\n/g, "\n").split("\n")) {
     if (/^```/.test(line.trim())) inFence = !inFence;
     const heading = !inFence ? line.match(/^(#{1,2})\s+(.+?)\s*$/) : null;
-    if (heading) {
-      if (current) sections.push(current);
-      current = { title: heading[2].replace(/\s+#+$/, ""), lines: [line] };
-    } else {
-      if (!current) current = { title: "Introduction", lines: ["# Introduction"] };
-      current.lines.push(line);
-    }
+    if (heading) { if (current) sections.push(current); current = { title: heading[2].replace(/\s+#+$/, ""), lines: [line] }; }
+    else { if (!current) current = { title: "Introduction", lines: ["# Introduction"] }; current.lines.push(line); }
   }
   if (current) sections.push(current);
   const filtered = wanted?.length ? sections.filter((section) => wanted.some((name) => name.toLowerCase() === section.title.toLowerCase())) : sections;
@@ -67,67 +44,51 @@ function splitMarkdown(source: string, wanted?: string[]): { title: string; mark
 }
 
 async function load(): Promise<void> {
-  $("status").textContent = "Loading bundled documentation...";
-  const manifest = await fetch("./docs/manifest.json").then((response) => response.json()) as { generatedAt: string };
+  $("status").textContent = "Loading documentation...";
+  const manifest = await getManifest();
   const results = await Promise.allSettled(STACKS.map(async (definition) => {
-    const markdown = await fetch(`./docs/${definition.file}`).then((response) => {
-      if (!response.ok) throw new Error(String(response.status));
-      return response.text();
-    });
+    const markdown = await readDocument(definition.file);
     const cards = await Promise.all(splitMarkdown(markdown, definition.sections).map(async (section) => ({ title: section.title, html: await marked.parse(section.markdown) })));
     return { ...definition, cards };
   }));
-  stacks = results.map((result, index) => result.status === "fulfilled" ? result.value : { ...STACKS[index], cards: [{ title: "Unavailable", html: `<h1>Unavailable</h1><p>${STACKS[index].file} is not in this snapshot.</p>` }] });
-  $("status").textContent = "Bundled from Macintosh-PiForma-docs";
-  $("snapshot").textContent = `Snapshot: ${new Date(manifest.generatedAt).toLocaleDateString()}`;
-  renderHome();
-  showHome();
+  stacks = results.map((result, index) => result.status === "fulfilled" ? result.value : { ...STACKS[index], cards: [{ title: "Unavailable", html: `<h1>Unavailable</h1><p>${STACKS[index].file} is not available.</p>` }] });
+  $("status").textContent = manifest.source === "cache" ? "Cached documentation" : "Bundled documentation";
+  $("snapshot").textContent = `${manifest.source === "cache" ? "Updated" : "Snapshot"}: ${new Date(manifest.generatedAt).toLocaleDateString()}`;
+  renderHome(); showHome();
 }
 
 function renderHome(): void {
-  const grid = $("icon-grid");
-  grid.innerHTML = "";
+  const grid = $("icon-grid"); grid.innerHTML = "";
   stacks.forEach((stack, index) => {
-    const button = document.createElement("button");
-    button.className = "icon-button";
+    const button = document.createElement("button"); button.className = "icon-button";
     button.innerHTML = `<span class="icon-art">${ICONS[stack.kind]}</span><span class="icon-label">${stack.title}</span>`;
     button.onclick = () => { grid.querySelectorAll("button").forEach((item) => item.classList.remove("selected")); button.classList.add("selected"); };
-    button.ondblclick = () => openStack(index, 0);
-    grid.append(button);
+    button.ondblclick = () => openStack(index, 0); grid.append(button);
   });
 }
 
-function showHome(): void {
-  $("home-view").classList.remove("hidden");
-  $("card-view").classList.remove("active");
-  $("picker").innerHTML = "<option>Choose a stack...</option>";
-}
-
+function showHome(): void { $("home-view").classList.remove("hidden"); $("card-view").classList.remove("active"); $("picker").innerHTML = "<option>Choose a stack...</option>"; }
 function openStack(nextStack: number, nextCard: number): void {
-  stackIndex = Math.max(0, Math.min(nextStack, stacks.length - 1));
-  const stack = stacks[stackIndex];
+  stackIndex = Math.max(0, Math.min(nextStack, stacks.length - 1)); const stack = stacks[stackIndex];
   cardIndex = Math.max(0, Math.min(nextCard, stack.cards.length - 1));
-  $("home-view").classList.add("hidden");
-  $("card-view").classList.add("active");
-  const picker = $("picker") as HTMLSelectElement;
-  picker.innerHTML = stack.cards.map((card, index) => `<option value="${index}">${card.title}</option>`).join("");
-  picker.value = String(cardIndex);
+  $("home-view").classList.add("hidden"); $("card-view").classList.add("active");
+  const picker = $("picker") as HTMLSelectElement; picker.innerHTML = stack.cards.map((card, index) => `<option value="${index}">${card.title}</option>`).join(""); picker.value = String(cardIndex);
   $("card-scroll").innerHTML = `<div class="stack-kicker">${stack.title} Stack</div>${stack.cards[cardIndex].html}`;
   $("counter").textContent = `Card ${cardIndex + 1} of ${stack.cards.length}`;
-  ($("previous") as HTMLButtonElement).disabled = cardIndex === 0;
-  ($("next") as HTMLButtonElement).disabled = cardIndex === stack.cards.length - 1;
+  ($("previous") as HTMLButtonElement).disabled = cardIndex === 0; ($("next") as HTMLButtonElement).disabled = cardIndex === stack.cards.length - 1;
 }
 
 $("home").onclick = showHome;
-$("reload").onclick = () => void load();
+$("update").onclick = async () => {
+  const button = $("update") as HTMLButtonElement;
+  if (!isTauriRuntime()) { await load(); return; }
+  button.disabled = true; $("status").textContent = "Checking for updates...";
+  try { const result = await updateDocumentation(); $("status").textContent = result?.updated ? `Updated ${result.files} files` : "Documentation is current"; await load(); }
+  catch (error) { $("status").textContent = `Update failed: ${String(error)}`; }
+  finally { button.disabled = false; }
+};
 $("previous").onclick = () => openStack(stackIndex, cardIndex - 1);
 $("next").onclick = () => openStack(stackIndex, cardIndex + 1);
 $("picker").onchange = (event) => openStack(stackIndex, Number((event.target as HTMLSelectElement).value));
-window.onkeydown = (event) => {
-  if (!$("card-view").classList.contains("active")) return;
-  if (event.key === "ArrowLeft" && cardIndex > 0) openStack(stackIndex, cardIndex - 1);
-  if (event.key === "ArrowRight" && cardIndex < stacks[stackIndex].cards.length - 1) openStack(stackIndex, cardIndex + 1);
-  if (event.key === "Escape") showHome();
-};
-
+window.onkeydown = (event) => { if (!$("card-view").classList.contains("active")) return; if (event.key === "ArrowLeft" && cardIndex > 0) openStack(stackIndex, cardIndex - 1); if (event.key === "ArrowRight" && cardIndex < stacks[stackIndex].cards.length - 1) openStack(stackIndex, cardIndex + 1); if (event.key === "Escape") showHome(); };
 void load();
