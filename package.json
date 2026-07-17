@@ -1,0 +1,21 @@
+{
+  "name": "macintosh-piforma-docs-viewer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "npm run snapshot",
+    "dev": "vite --host 127.0.0.1 --port 1420",
+    "snapshot": "node scripts/build-docs-snapshot.mjs",
+    "build": "npm run snapshot && tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "marked": "^16.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vite": "^7.3.6"
+  }
+}
