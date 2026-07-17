@@ -1,6 +1,6 @@
 [package]
 name = "macintosh-piforma-docs-viewer"
-version = "0.2.0"
+version = "0.3.0"
 description = "Mac OS 8/9-style viewer for Macintosh PiForma documentation"
 authors = ["Matthew Frost"]
 edition = "2021"
@@ -19,3 +19,5 @@ tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
