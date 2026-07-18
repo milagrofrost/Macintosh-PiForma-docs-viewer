@@ -1,1 +1,0 @@
-The seven custom home-stack icons are applied after the documentation finishes loading. Meet PiForma remains unchanged.
