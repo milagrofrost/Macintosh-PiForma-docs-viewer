@@ -68,8 +68,8 @@ function renderHome(): void {
   stacks.forEach((stack, index) => {
     const button = document.createElement("button"); button.className = "icon-button";
     button.innerHTML = `<span class="icon-art">${ICONS[stack.kind]}</span><span class="icon-label">${stack.title}</span>`;
-    button.onclick = () => { grid.querySelectorAll("button").forEach((item) => item.classList.remove("selected")); button.classList.add("selected"); };
-    button.ondblclick = () => openStack(index, 0); grid.append(button);
+    button.onclick = () => openStack(index, 0);
+    grid.append(button);
   });
 }
 
