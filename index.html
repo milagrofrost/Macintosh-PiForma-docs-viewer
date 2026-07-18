@@ -9,6 +9,28 @@
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
-    <script src="/home-stack-icons.js" async></script>
+    <script>
+      (() => {
+        const start = Date.now();
+        const timer = setInterval(() => {
+          const status = document.getElementById("status");
+          const icons = document.querySelectorAll("#icon-grid .icon-art");
+          const ready = icons.length >= 8 && status && status.textContent !== "Loading documentation...";
+
+          if (ready) {
+            clearInterval(timer);
+            const script = document.createElement("script");
+            script.src = "/home-stack-icons.js";
+            script.async = true;
+            document.body.appendChild(script);
+            return;
+          }
+
+          if (Date.now() - start > 15000) {
+            clearInterval(timer);
+          }
+        }, 200);
+      })();
+    </script>
   </body>
 </html>
