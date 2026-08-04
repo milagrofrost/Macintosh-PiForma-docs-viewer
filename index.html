@@ -5,9 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#6f7788" />
     <title>Macintosh PiForma Guided Tour</title>
+    <style>
+      /* Meet PiForma is the first icon and remains unchanged. Hide the seven
+         legacy SVG placeholders before first paint; the custom sprite reveals
+         these slots only after it has loaded successfully. */
+      #icon-grid .icon-button:not(:first-child) .icon-art {
+        visibility: hidden;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
+    <script src="/home-stack-icons.js" defer></script>
   </body>
 </html>
