@@ -5,6 +5,7 @@ const repository = "milagrofrost/Macintosh-PiForma-docs";
 const branch = "main";
 const files = [
   "README.md",
+  "docs/photos.md",
   "docs/hardware.md",
   "docs/software.md",
   "docs/wiring.md",
