@@ -4,6 +4,7 @@ use tauri::{AppHandle, Manager};
 
 const DOCS: &[&str] = &[
     "README.md",
+    "docs/photos.md",
     "docs/hardware.md",
     "docs/software.md",
     "docs/wiring.md",
