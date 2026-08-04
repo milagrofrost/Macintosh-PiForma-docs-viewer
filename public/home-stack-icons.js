@@ -3,6 +3,33 @@
   const ICON_SIZE = 48;
   const ICON_COUNT = 7;
   const INSTALLED_MARKER = "customHomeStackIcon";
+  const PHOTO_TOUR_LABEL = "Photo Tour";
+  const PHOTO_TOUR_BUTTON_ID = "photo-tour";
+
+  const findPhotoTourStackButton = () =>
+    Array.from(document.querySelectorAll("#icon-grid .icon-button")).find(
+      (button) => button.querySelector(".icon-label")?.textContent?.trim() === PHOTO_TOUR_LABEL,
+    );
+
+  const installPhotoTourToolbarButton = () => {
+    const toolbar = document.querySelector(".toolbar");
+    const updateButton = document.getElementById("update");
+    if (!toolbar || !updateButton) return false;
+
+    let button = document.getElementById(PHOTO_TOUR_BUTTON_ID);
+    if (!button) {
+      button = document.createElement("button");
+      button.id = PHOTO_TOUR_BUTTON_ID;
+      button.textContent = PHOTO_TOUR_LABEL;
+      button.addEventListener("click", () => {
+        const stackButton = findPhotoTourStackButton();
+        if (stackButton instanceof HTMLButtonElement) stackButton.click();
+      });
+      toolbar.insertBefore(button, updateButton);
+    }
+
+    return true;
+  };
 
   const loadSprite = async () => {
     const response = await fetch(SPRITE_PATH, { cache: "force-cache" });
@@ -24,7 +51,18 @@
   };
 
   const installIcons = (spriteSource) => {
-    const icons = Array.from(document.querySelectorAll("#icon-grid .icon-art"));
+    installPhotoTourToolbarButton();
+
+    const photoTourButton = findPhotoTourStackButton();
+    if (photoTourButton instanceof HTMLElement) photoTourButton.style.display = "none";
+
+    const homeButtons = Array.from(document.querySelectorAll("#icon-grid .icon-button")).filter(
+      (button) => button !== photoTourButton,
+    );
+    const icons = homeButtons
+      .map((button) => button.querySelector(".icon-art"))
+      .filter((icon) => icon instanceof HTMLElement);
+
     if (icons.length < 8) return false;
 
     for (let index = 0; index < ICON_COUNT; index += 1) {
@@ -75,8 +113,8 @@
 
       scheduleInstall();
 
-      // The application's Reload button rebuilds the home icon grid. Keep the
-      // observer active so the custom icons are reapplied to each new grid.
+      // Reload and documentation updates rebuild the home icon grid. Keep the
+      // observer active so the toolbar button and custom icons are restored.
       const observer = new MutationObserver(scheduleInstall);
       observer.observe(document.getElementById("app") || document.body, {
         childList: true,
