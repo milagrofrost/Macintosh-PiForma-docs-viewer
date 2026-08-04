@@ -9,6 +9,7 @@ export interface StackDefinition {
 
 export const STACKS: StackDefinition[] = [
   { title: "Meet PiForma", file: "README.md", kind: "computer", sections: ["Macintosh PiForma", "What it does", "Why this exists", "Project status"] },
+  { title: "Photo Tour", file: "docs/photos.md", kind: "computer" },
   { title: "Hardware", file: "docs/hardware.md", kind: "folder-hardware" },
   { title: "Software", file: "docs/software.md", kind: "folder-software", sections: ["Software", "System", "Current graphical stack", "Boot flow", "Desktop look", "Apple logo gesture button", "Volume knob", "Included apps and launchers"] },
   { title: "Wiring", file: "docs/wiring.md", kind: "wiring" },
