@@ -2,6 +2,8 @@
 
 A browser and Tauri 2, Mac OS 8/9 and HyperCard-inspired viewer for the Macintosh PiForma documentation.
 
+![Docs Viewer home stack in the browser build](docs/images/viewer-home.png)
+
 The editorial source of truth remains `milagrofrost/Macintosh-PiForma-docs`. Website and app builds include an offline snapshot. The Tauri app can also refresh its writable cache without rebuilding or reinstalling the application.
 
 ## Current behavior
